@@ -1,19 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+</head>
+<body>
 <h2>Register</h2>
 <input id="username" placeholder="Username">
 <input id="password" placeholder="Password" type="password">
-<button onclick="register()">Register</button>
+<button onclick="registerUser()">Register</button>
+
 <script>
-async function register() {
-    const res = await fetch("http://127.0.0.1:5000/register", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            username: document.getElementById("username").value,
-            password: document.getElementById("password").value
-        })
-    });
-    const data = await res.json();
-    alert(JSON.stringify(data));
-    if(data.status==="success") window.location="index.html";
+async function registerUser() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    try {
+        const res = await fetch("http://127.0.0.1:5000/register", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({username, password})
+        });
+        const data = await res.json();
+
+        if(data.status==="success") {
+            alert("Registered successfully!");
+            window.location = "index.html";
+        } else {
+            alert("Error: " + data.message);
+        }
+    } catch(err) {
+        alert("Network error: " + err);
+    }
 }
 </script>
+</body>
+</html>
