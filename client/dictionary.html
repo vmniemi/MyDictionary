@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dictionary</title>
+</head>
+<body>
+<h2>Dictionary: <span id="dictLanguage"></span></h2>
+
+<input id="word" placeholder="Word">
+<input id="translation" placeholder="Translation">
+<button onclick="addWord()">Add Word</button>
+
+<h3>Words</h3>
+<ul id="wordList"></ul>
+
+<script>
+const dictionaryId = localStorage.getItem("dictionary_id");
+const language = localStorage.getItem("dictionary_language");
+document.getElementById("dictLanguage").textContent = language;
+
+// Load words
+async function loadWords() {
+    const res = await fetch(`http://127.0.0.1:5000/get_words/${dictionaryId}`);
+    const words = await res.json();
+    const list = document.getElementById("wordList");
+    list.innerHTML = "";
+    words.forEach(w => {
+        const li = document.createElement("li");
+        li.textContent = `${w.word} → ${w.translation}`;
+        list.appendChild(li);
+    });
+}
+
+// Add a new word
+async function addWord() {
+    const word = document.getElementById("word").value;
+    const translation = document.getElementById("translation").value;
+
+    const res = await fetch("http://127.0.0.1:5000/add_word", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({dictionary_id: dictionaryId, word, translation})
+    });
+    const data = await res.json();
+    if(data.status==="success") {
+        document.getElementById("word").value = "";
+        document.getElementById("translation").value = "";
+        loadWords();
+    } else {
+        alert("Error adding word");
+    }
+}
+
+// Load words on page load
+loadWords();
+</script>
+</body>
+</html>
