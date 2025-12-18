@@ -4,7 +4,7 @@ import sqlite3
 import bcrypt
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:8000"}})
 DATABASE = "database.db"
 
 def get_db_connection():
