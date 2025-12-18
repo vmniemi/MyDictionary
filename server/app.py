@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import sqlite3
+import bcrypt
 
 app = Flask(__name__)
 DATABASE = "database.db"
@@ -46,7 +47,9 @@ init_db()
 def register():
     data = request.json
     username = data.get("username")
-    password = data.get("password")  # In production: hash passwords
+    password = data.get("password").encode("utf-8")
+
+    hashed = bcrypt.hashpw(password, bcrypt.gensalt())
 
     conn = get_db_connection()
     try:
@@ -62,16 +65,19 @@ def register():
 def login():
     data = request.json
     username = data.get("username")
-    password = data.get("password")
+    password = data.get("password").encode("utf-8")
+
 
     conn = get_db_connection()
-    user = conn.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password)).fetchone()
+    user = conn.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
     conn.close()
 
-    if user:
+
+    if user and bcrypt.checkpw(password, user["password"]):
         return jsonify({"status": "success", "user_id": user["id"]})
     else:
         return jsonify({"status": "error", "message": "Invalid credentials"}), 401
+        
 
 @app.route("/create_dictionary", methods=["POST"])
 def create_dictionary():
@@ -114,6 +120,27 @@ def get_words(dictionary_id):
     words = conn.execute("SELECT * FROM words WHERE dictionary_id=?", (dictionary_id,)).fetchall()
     conn.close()
     return jsonify([dict(row) for row in words])
+
+@app.route("/edit_word/<int:word_id>", methods=["PUT"])
+def edit_word(word_id):
+    data = request.json
+    word = data.get("word")
+    translation = data.get("translation")
+
+    conn = get_db_connection()
+    conn.execute("UPDATE words SET word=?, translation=? WHERE id=?", (word, translation, word_id))
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "success"}), 200
+
+@app.route("/delete_word/<int:word_id>", methods=["DELETE"])
+def delete_word(word_id):
+    conn = get_db_connection()
+    conn.execute("DELETE FROM words WHERE id=?", (word_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "success"}), 200
+
 
 if __name__ == "__main__":
     app.run(debug=True)
