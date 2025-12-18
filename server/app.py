@@ -78,7 +78,7 @@ def login():
     user = conn.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
     conn.close()
 
-    if user and bcrypt.checkpw(password.encode("utf-8"), user["password"]):
+    if user and bcrypt.checkpw(password.encode("utf-8"), user["password"].encode("utf-8")):
         return jsonify({"status": "success", "user_id": user["id"]}), 200
     else:
         return jsonify({"status": "error", "message": "Invalid credentials"}), 401
