@@ -77,11 +77,70 @@ def login():
     conn = get_db_connection()
     user = conn.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
     conn.close()
-    
-    if user and bcrypt.checkpw(password.encode("utf-8"), user["password"]):
+
+    if user and bcrypt.checkpw(password.encode("utf-8"), user["password"].encode("utf-8")):
         return jsonify({"status": "success", "user_id": user["id"]}), 200
     else:
         return jsonify({"status": "error", "message": "Invalid credentials"}), 401
+
+@app.route("/create_dictionary", methods=["POST"]) 
+def create_dictionary(): 
+    data = request.json 
+    user_id = data.get("user_id") 
+    language = data.get("language")
+
+    conn = get_db_connection() 
+    conn.execute("INSERT INTO dictionaries (user_id, language) VALUES (?, ?)", (user_id, language)) 
+    conn.commit() 
+    conn.close() 
+    return jsonify({"status": "success"}), 201
+
+@app.route("/add_word", methods=["POST"]) 
+def add_word(): 
+    data = request.json 
+    dictionary_id = data.get("dictionary_id") 
+    word = data.get("word") 
+    translation = data.get("translation")
+
+    conn = get_db_connection() 
+    conn.execute( "INSERT INTO words (dictionary_id, word, translation) VALUES (?, ?, ?)", (dictionary_id, word, translation) ) 
+    conn.commit() 
+    conn.close() 
+    return jsonify({"status": "success"}), 201
+
+@app.route("/get_dictionaries/<int:user_id>") 
+def get_dictionaries(user_id): 
+    conn = get_db_connection() 
+    dictionaries = conn.execute("SELECT * FROM dictionaries WHERE user_id=?", (user_id,)).fetchall() 
+    conn.close() 
+    return jsonify([dict(row) for row in dictionaries])
+
+@app.route("/get_words/<int:dictionary_id>") 
+def get_words(dictionary_id): 
+    conn = get_db_connection() 
+    words = conn.execute("SELECT * FROM words WHERE dictionary_id=?", (dictionary_id,)).fetchall() 
+    conn.close() 
+    return jsonify([dict(row) for row in words])
+
+@app.route("/edit_word/<int:word_id>", methods=["PUT"]) 
+def edit_word(word_id): 
+    data = request.json 
+    word = data.get("word") 
+    translation = data.get("translation")
+
+    conn = get_db_connection() 
+    conn.execute("UPDATE words SET word=?, translation=? WHERE id=?", (word, translation, word_id)) 
+    conn.commit() 
+    conn.close() 
+    return jsonify({"status": "success"}), 200
+
+@app.route("/delete_word/<int:word_id>", methods=["DELETE"]) 
+def delete_word(word_id): 
+    conn = get_db_connection() 
+    conn.execute("DELETE FROM words WHERE id=?", (word_id,)) 
+    conn.commit() 
+    conn.close() 
+    return jsonify({"status": "success"}), 200
 
 
 
