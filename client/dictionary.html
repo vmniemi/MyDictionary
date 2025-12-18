@@ -18,23 +18,53 @@ const dictionaryId = localStorage.getItem("dictionary_id");
 const language = localStorage.getItem("dictionary_language");
 document.getElementById("dictLanguage").textContent = language;
 
-// Load words
 async function loadWords() {
     const res = await fetch(`http://127.0.0.1:5000/get_words/${dictionaryId}`);
     const words = await res.json();
+
     const list = document.getElementById("wordList");
     list.innerHTML = "";
+
     words.forEach(w => {
         const li = document.createElement("li");
-        li.textContent = `${w.word} → ${w.translation}`;
+        li.textContent = `${w.word} → ${w.translation} `;
+
+        // Edit button
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+        editBtn.onclick = async () => {
+            const newWord = prompt("New word:", w.word);
+            const newTranslation = prompt("New translation:", w.translation);
+            if(newWord && newTranslation) {
+                await fetch(`http://127.0.0.1:5000/edit_word/${w.id}`, {
+                    method: "PUT",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({word: newWord, translation: newTranslation})
+                });
+                loadWords();
+            }
+        };
+        li.appendChild(editBtn);
+
+        // Delete button
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "Delete";
+        delBtn.onclick = async () => {
+            if(confirm("Delete this word?")) {
+                await fetch(`http://127.0.0.1:5000/delete_word/${w.id}`, {method:"DELETE"});
+                loadWords();
+            }
+        };
+        li.appendChild(delBtn);
+
         list.appendChild(li);
     });
 }
 
-// Add a new word
 async function addWord() {
     const word = document.getElementById("word").value;
     const translation = document.getElementById("translation").value;
+    if(!word || !translation) return alert("Enter both word and translation");
 
     const res = await fetch("http://127.0.0.1:5000/add_word", {
         method: "POST",
@@ -42,6 +72,7 @@ async function addWord() {
         body: JSON.stringify({dictionary_id: dictionaryId, word, translation})
     });
     const data = await res.json();
+
     if(data.status==="success") {
         document.getElementById("word").value = "";
         document.getElementById("translation").value = "";
@@ -50,42 +81,6 @@ async function addWord() {
         alert("Error adding word");
     }
 }
-
-words.forEach(w => {
-    const li = document.createElement("li");
-    li.textContent = `${w.word} → ${w.translation} `;
-
-    // Edit button
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "Edit";
-    editBtn.onclick = async () => {
-        const newWord = prompt("New word:", w.word);
-        const newTranslation = prompt("New translation:", w.translation);
-        if(newWord && newTranslation) {
-            await fetch(`http://127.0.0.1:5000/edit_word/${w.id}`, {
-                method: "PUT",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({word: newWord, translation: newTranslation})
-            });
-            loadWords();
-        }
-    };
-    li.appendChild(editBtn);
-
-    // Delete button
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "Delete";
-    delBtn.onclick = async () => {
-        if(confirm("Delete this word?")) {
-            await fetch(`http://127.0.0.1:5000/delete_word/${w.id}`, {method:"DELETE"});
-            loadWords();
-        }
-    };
-    li.appendChild(delBtn);
-
-    list.appendChild(li);
-});
-
 
 // Load words on page load
 loadWords();
