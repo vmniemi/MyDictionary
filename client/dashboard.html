@@ -11,16 +11,15 @@
 <ul id="dictionaryList"></ul>
 
 <script>
-// Get logged-in user_id from localStorage
 const userId = localStorage.getItem("user_id");
 
-// Load user's dictionaries
 async function loadDictionaries() {
     const res = await fetch(`http://127.0.0.1:5000/get_dictionaries/${userId}`);
     const dictionaries = await res.json();
 
     const list = document.getElementById("dictionaryList");
     list.innerHTML = "";
+
     dictionaries.forEach(d => {
         const li = document.createElement("li");
         li.textContent = `${d.language} `;
@@ -36,16 +35,19 @@ async function loadDictionaries() {
     });
 }
 
-// Create a new dictionary
 async function createDictionary() {
     const language = document.getElementById("newLanguage").value;
+    if(!language) return alert("Enter a language!");
+
     const res = await fetch("http://127.0.0.1:5000/create_dictionary", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({user_id: userId, language})
     });
     const data = await res.json();
+
     if(data.status==="success") {
+        document.getElementById("newLanguage").value = "";
         loadDictionaries();
     } else {
         alert("Error creating dictionary");
