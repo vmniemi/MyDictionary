@@ -36,6 +36,7 @@ def init_db():
             word TEXT NOT NULL,
             translation TEXT,
             FOREIGN KEY(dictionary_id) REFERENCES dictionaries(id)
+            UNIQUE(dictionary_id, word)
         )
     """)
     conn.commit()
@@ -78,7 +79,7 @@ def login():
     user = conn.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
     conn.close()
 
-    if user and bcrypt.checkpw(password.encode("utf-8"), user["password"].encode("utf-8")):
+    if user and bcrypt.checkpw(password.encode("utf-8"), user["password"]):
         return jsonify({"status": "success", "user_id": user["id"]}), 200
     else:
         return jsonify({"status": "error", "message": "Invalid credentials"}), 401
@@ -95,18 +96,30 @@ def create_dictionary():
     conn.close() 
     return jsonify({"status": "success"}), 201
 
-@app.route("/add_word", methods=["POST"]) 
-def add_word(): 
-    data = request.json 
-    dictionary_id = data.get("dictionary_id") 
-    word = data.get("word") 
+@app.route("/add_word", methods=["POST"])
+def add_word():
+    data = request.json
+    dictionary_id = data.get("dictionary_id")
+    word = data.get("word")
     translation = data.get("translation")
 
-    conn = get_db_connection() 
-    conn.execute( "INSERT INTO words (dictionary_id, word, translation) VALUES (?, ?, ?)", (dictionary_id, word, translation) ) 
-    conn.commit() 
-    conn.close() 
-    return jsonify({"status": "success"}), 201
+    if not dictionary_id or not word or translation is None:
+        return jsonify({"status":"error","message":"Missing data"}), 400
+
+    conn = get_db_connection()
+    try:
+        conn.execute(
+            "INSERT INTO words (dictionary_id, word, translation) VALUES (?, ?, ?)",
+            (dictionary_id, word, translation)
+        )
+        conn.commit()
+        return jsonify({"status": "success"}), 201
+    except sqlite3.IntegrityError:
+        return jsonify({"status":"error","message":"Word already exists in this dictionary"}), 400
+    finally:
+        conn.close()
+
+        
 
 @app.route("/get_dictionaries/<int:user_id>") 
 def get_dictionaries(user_id): 

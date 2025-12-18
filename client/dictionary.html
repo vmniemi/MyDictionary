@@ -79,7 +79,7 @@ async function addWord() {
         document.getElementById("translation").value = "";
         loadWords();
     } else {
-        alert("Error adding word");
+        alert("Error: " + data.message );
     }
 }
 
