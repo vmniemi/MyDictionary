@@ -12,8 +12,9 @@ python -m http.server 8000
 
 - Add parsing of multiple words instead of just one 
 - Add a new box if multiple words added for easier use
+- Preliminary CSS
 
   
 # ToDO
-- Add CSS
+- Add fancier CSS?
 - Hosting outside of localhost(PythonAnywhere?)
