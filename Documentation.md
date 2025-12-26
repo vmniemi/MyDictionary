@@ -5,4 +5,4 @@
 Current progress: Working frontend, backend and database on localhost. 
 
 
-![image of cmd](localhost.PNG)
+![image of cmd](Localhost.PNG)
