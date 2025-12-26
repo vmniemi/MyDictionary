@@ -2,12 +2,27 @@
 <html>
 <head>
      <meta charset="UTF-8">
+     <link rel="stylesheet" href="css/style.css">
     <title>Dashboard</title>
+    
 </head>
 <body>
-<h2>Your Dictionaries</h2>
-<input id="newLanguage" placeholder="New dictionary language">
-<button onclick="createDictionary()">Create Dictionary</button>
+
+<div class="container">
+
+        <div class="card">
+
+        <h2>Your Dictionaries</h2>
+        <input id="newLanguage" placeholder="New dictionary language">
+        <button onclick="createDictionary()">Create Dictionary</button>
+        </div>
+
+
+    <div class="card">
+        <ul id="dictionaryList"></ul>
+    </div>
+    
+</div>
 
 <ul id="dictionaryList"></ul>
 
