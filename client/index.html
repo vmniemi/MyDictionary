@@ -1,39 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-     <meta charset="UTF-8">
+    <meta charset="UTF-8">
+     <link rel="stylesheet" href="css/style.css">
     <title>Login</title>
+    
 </head>
 <body>
-<h2>Login</h2>
-<input id="username" placeholder="Username">
-<input id="password" placeholder="Password" type="password">
-<button onclick="loginUser()">Login</button>
+
+<div class="card centered">
+    <h2>Login</h2>
+
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+
+    <p class="muted">
+        No account? <a href="register.html">Register here</a>
+    </p>
+</div>
 
 <script>
-async function loginUser() {
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-
-    try {
-        const res = await fetch("http://127.0.0.1:5000/login", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({username, password})
-        });
-        const data = await res.json();
-
-        if(data.status==="success") {
-            localStorage.setItem("user_id", data.user_id);
-            alert("Logged in! User ID: "+data.user_id);
-            window.location = "dashboard.html";
-        } else {
-            alert("Error: " + data.message);
-        }
-    } catch(err) {
-        alert("Network error: " + err);
+async function login() {
+    const res = await fetch("http://127.0.0.1:5000/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            username: document.getElementById("username").value,
+            password: document.getElementById("password").value
+        })
+    });
+    const data = await res.json();
+    if(data.status==="success") {
+        localStorage.setItem("user_id", data.user_id);
+        window.location = "dashboard.html";
+    } else {
+        alert(data.message);
     }
 }
 </script>
+
 </body>
 </html>
