@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/style.css">
     <title>Dictionary</title>
     <style>
         textarea { width: 100%; height: 100px; }
@@ -10,12 +11,17 @@
 </head>
 <body>
 
-<h2>Dictionary: <span id="dictLanguage"></span></h2>
+
+
+<div class="container">
+    <h2>Dictionary: <span id="dictLanguage"></span></h2>
+
 
 <!-- Single word add -->
 <input id="word" placeholder="Word">
 <input id="translation" placeholder="Translation">
-<button onclick="addWord()">Add Word</button>
+<button class="btn-primary" onclick="addWord()">Add Word</button>
+
 
 <hr>
 
@@ -61,7 +67,11 @@ async function loadWords() {
 
     words.forEach(w => {
         const li = document.createElement("li");
-        li.textContent = `${w.word} → ${w.translation} `;
+        const span = document.createElement("span");
+        span.className = "word-text";
+        span.textContent = `${w.word} → ${w.translation}`;
+        li.appendChild(span);
+
 
         const editBtn = document.createElement("button");
         editBtn.textContent = "Edit";
@@ -194,3 +204,6 @@ loadWords();
 </script>
 </body>
 </html>
+</div>
+</body>
+
