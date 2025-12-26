@@ -1,15 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-     <meta charset="UTF-8">
+    <meta charset="UTF-8">
     <title>Dictionary</title>
+    <style>
+        textarea { width: 100%; height: 100px; }
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
+
 <h2>Dictionary: <span id="dictLanguage"></span></h2>
 
+<!-- Single word add -->
 <input id="word" placeholder="Word">
 <input id="translation" placeholder="Translation">
 <button onclick="addWord()">Add Word</button>
+
+<hr>
+
+<!-- Multiple words -->
+<button onclick="showMultiAdd()">Add multiple words</button>
+
+<div id="multiAddBox" class="hidden">
+    <h3>Paste words or sentences</h3>
+    <textarea id="multiInput" placeholder="Paste text here..."></textarea>
+    <br>
+    <button onclick="prepareMultiWords()">Add translations for new words</button>
+</div>
+
+<div id="translationBox" class="hidden">
+    <h3 id="translateTitle"></h3>
+    <p><strong id="currentWord"></strong></p>
+    <input id="multiTranslation" placeholder="Enter translation">
+    <br><br>
+    <button onclick="saveCurrentTranslation()">Save & Next</button>
+</div>
+
+<hr>
 
 <h3>Words</h3>
 <ul id="wordList"></ul>
@@ -18,6 +46,11 @@
 const dictionaryId = localStorage.getItem("dictionary_id");
 const language = localStorage.getItem("dictionary_language");
 document.getElementById("dictLanguage").textContent = language;
+
+let newWords = [];
+let currentIndex = 0;
+
+/* ---------------- LOAD WORDS ---------------- */
 
 async function loadWords() {
     const res = await fetch(`http://127.0.0.1:5000/get_words/${dictionaryId}`);
@@ -30,7 +63,6 @@ async function loadWords() {
         const li = document.createElement("li");
         li.textContent = `${w.word} → ${w.translation} `;
 
-        // Edit button
         const editBtn = document.createElement("button");
         editBtn.textContent = "Edit";
         editBtn.onclick = async () => {
@@ -47,7 +79,6 @@ async function loadWords() {
         };
         li.appendChild(editBtn);
 
-        // Delete button
         const delBtn = document.createElement("button");
         delBtn.textContent = "Delete";
         delBtn.onclick = async () => {
@@ -62,9 +93,11 @@ async function loadWords() {
     });
 }
 
+/* ---------------- SINGLE ADD ---------------- */
+
 async function addWord() {
-    const word = document.getElementById("word").value;
-    const translation = document.getElementById("translation").value;
+    const word = document.getElementById("word").value.trim();
+    const translation = document.getElementById("translation").value.trim();
     if(!word || !translation) return alert("Enter both word and translation");
 
     const res = await fetch("http://127.0.0.1:5000/add_word", {
@@ -79,11 +112,84 @@ async function addWord() {
         document.getElementById("translation").value = "";
         loadWords();
     } else {
-        alert("Error: " + data.message );
+        alert("Error: " + data.message);
     }
 }
 
-// Load words on page load
+/* ---------------- MULTI ADD ---------------- */
+
+function showMultiAdd() {
+    document.getElementById("multiAddBox").classList.toggle("hidden");
+}
+
+function prepareMultiWords() {
+    const text = document.getElementById("multiInput").value;
+
+    if(!text.trim()) {
+        alert("Paste some text first");
+        return;
+    }
+
+    // Split text into words
+    const cleaned = text
+        .toLowerCase()
+        .replace(/[^\p{L}\s]/gu, "")
+        .split(/\s+/)
+        .filter(w => w.length > 0);
+
+    newWords = [...new Set(cleaned)];
+    currentIndex = 0;
+
+    if(newWords.length === 0) {
+        alert("No valid words found");
+        return;
+    }
+
+    document.getElementById("multiAddBox").classList.add("hidden");
+    document.getElementById("translationBox").classList.remove("hidden");
+    showCurrentWord();
+}
+
+function showCurrentWord() {
+    document.getElementById("multiTranslation").value = "";
+    document.getElementById("currentWord").textContent = newWords[currentIndex];
+    document.getElementById("translateTitle").textContent =
+        `Word ${currentIndex + 1} of ${newWords.length}`;
+}
+
+async function saveCurrentTranslation() {
+    const translation = document.getElementById("multiTranslation").value.trim();
+    if(!translation) {
+        alert("Please enter a translation");
+        return;
+    }
+
+    const word = newWords[currentIndex];
+
+    await fetch("http://127.0.0.1:5000/add_word", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            dictionary_id: dictionaryId,
+            word: word,
+            translation: translation
+        })
+    });
+
+    currentIndex++;
+
+    if(currentIndex < newWords.length) {
+        showCurrentWord();
+    } else {
+        alert(`Added ${newWords.length} words successfully`);
+        document.getElementById("translationBox").classList.add("hidden");
+        document.getElementById("multiInput").value = "";
+        loadWords();
+    }
+}
+
+/* ---------------- INIT ---------------- */
+
 loadWords();
 </script>
 </body>
