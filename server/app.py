@@ -155,6 +155,52 @@ def delete_word(word_id):
     conn.close() 
     return jsonify({"status": "success"}), 200
 
+@app.route("/add_words_bulk", methods=["POST"])
+def add_words_bulk():
+    data = request.json
+    dictionary_id = data.get("dictionary_id")
+    words = data.get("words")
+
+    if not dictionary_id or not words:
+        return jsonify({"status": "error", "message": "Missing data"}), 400
+
+    conn = get_db_connection()
+    added = 0
+    skipped = 0
+
+    for item in words:
+        word = item.get("word")
+        translation = item.get("translation")
+
+        if not word:
+            continue
+
+        # check duplicate
+        exists = conn.execute(
+            "SELECT 1 FROM words WHERE dictionary_id=? AND word=?",
+            (dictionary_id, word)
+        ).fetchone()
+
+        if exists:
+            skipped += 1
+            continue
+
+        conn.execute(
+            "INSERT INTO words (dictionary_id, word, translation) VALUES (?, ?, ?)",
+            (dictionary_id, word, translation)
+        )
+        added += 1
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "status": "success",
+        "added": added,
+        "skipped": skipped
+    }), 201
+
+
 
 
 if __name__ == "__main__":
