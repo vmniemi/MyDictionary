@@ -6,9 +6,14 @@ cd path/to/client
 python -m http.server 8000
 
 
-# ToDO
 
-- Add parsing of multiple words instead of just one
+
+# Done:
+
+- Add parsing of multiple words instead of just one 
 - Add a new box if multiple words added for easier use
+
+  
+# ToDO
 - Add CSS
 - Hosting outside of localhost(PythonAnywhere?)
